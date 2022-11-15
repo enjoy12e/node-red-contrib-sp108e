@@ -1,0 +1,63 @@
+{
+    "sp108eCommand" : {
+        "label": {
+            "device":"Device",
+            "mode":"Mode",
+            "preset":"Mode",
+            "onoff":"Value",
+            "animationMode":"Mode",
+            "monoColorAnimType":"Type",
+            "mixedColorAnimMode":"Selection",
+            "mixedColorAnimType":"Type",
+            "brightness":"Value",
+            "color":"Value",
+            "speed":"Value",
+            "white":"Value",
+            "order":"Value",
+            "chip":"Value",
+            "leds":"Number",
+            "segments":"Number",
+            "status":"Return device status",
+            "debug":"Trace debug info"
+        },
+        "cmd": {
+            "preset":"Preset",
+            "onoff":"On-Off",
+            "toggle":"Toggle",
+            "animation":"Animation",
+            "brightness":"Brightness",
+            "color":"Color",
+            "speed":"Animation speed",
+            "white":"Brightness of white",
+            "order":"Color order",
+            "chip":"Chip type",
+            "leds":"Segment led count",
+            "segments":"Number of segments",
+            "getname":"Get device name",
+            "setname":"Set device name",
+            "json":"JSON data",
+            "status":"Get device status"
+        },
+        "state": {
+            "on":"On",
+            "off":"Off"
+        },
+        "animation": {
+            "mono":"Mono color",
+            "mixed":"Mixed color",
+            "auto":"Automatic",
+            "manual":"Manual",
+            "meteor":"Meteor",
+            "breathing":"Breathing",
+            "stack":"Stack",
+            "flow":"Flow",
+            "wave":"Wave",
+            "flash":"Flash",
+            "static":"Static",
+            "catchup":"Catch Up"
+        },
+        "msg": {
+            "tip": "<b>Mixed color animation type:</b>  Must be integer value between 1 and 180</br><b>Brightness:</b>  Must be integer value between 1 and 255</br><b>Animation speed:</b>  Must be integer value between 0 and 255</br><b>Brightness of white:</b>  Must be integer value between 0 and 255</br><b>Segment led count:</b>  Must be integer value between 1 and 300</br><b>Number of segments:</b>  Must be integer value between 1 and 300</br>"
+        }
+    }
+}

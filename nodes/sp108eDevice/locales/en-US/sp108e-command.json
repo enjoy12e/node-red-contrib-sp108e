@@ -1,0 +1,24 @@
+{
+    "sp108eCommand" : {
+        "label": {
+            "device":"Device",
+            "command":"Command",
+            "preset":"Mode",
+            "onoff":"Value",
+            "brightness":"Value",
+            "speed":"Value",
+            "white":"Value"
+        },
+        "mode": {
+            "preset":"Preset",
+            "onoff":"On-Off",
+            "toggle":"Toggle",
+            "brightness":"Brightness",
+            "speed":"Animation speed",
+            "white":"Brightness of white",
+            "json":"JSON data",
+            "on":"On",
+            "off":"Off"
+        }
+    }
+}

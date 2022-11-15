@@ -1,0 +1,375 @@
+<script type="text/javascript">
+paramNodeValidator = function (param, value) {
+    switch (param) {
+      case 'mixedColorAnimType':
+        return RED.validators.regex(/^([1-9]|[1-9]\d|1[0-7]\d|180)$/)(value);
+      case 'brightness':
+        return RED.validators.regex(/^([1-9]|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$/)(value);
+      case 'speed':
+        return RED.validators.regex(/^([0-9]|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$/)(value);
+      case 'white':
+        return RED.validators.regex(/^([0-9]|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$/)(value);
+      case 'leds':
+        return RED.validators.regex(/^([1-9]|[1-9]\d|[1-2]\d\d|300)$/)(value);
+      case 'segments':
+        return RED.validators.regex(/^([1-9]|[1-9]\d|[1-2]\d\d|300)$/)(value);
+    }
+  };
+
+RED.nodes.registerType('sp108eCommand', {
+  category: 'sp108e',
+  color: '#a6bbcf',
+  icon: 'command.png',
+  defaults: {
+    name: { value: 'sp108eCommand' },
+    device: { value: '', type: 'sp108eDevice', },
+    mode: { value: 'preset' },
+    command: { value: {} },
+    returnStatus: { value: false },
+    debug: { value: false },
+  },
+  oneditprepare: function () {
+    $('#sp108e-onoff').val(this.command.hasOwnProperty('state') ?
+      this.command.state : 'on');
+    if (this.command.hasOwnProperty('animation')) {
+      if (this.command.animation.hasOwnProperty('mono')) {
+        $('#sp108e-animationMode').val('mono');
+        $('#sp108e-monoColorAnimType').val(this.command.animation.mono);
+      }
+
+      if (this.command.animation.hasOwnProperty('mixed')) {
+        $('#sp108e-animationMode').val('mixed');
+        $('#sp108e-mixedColorAnimType').val(1);
+        if (this.command.animation.mixed === 'auto') {
+          $('#sp108e-mixedColorAnimMode').val('auto');
+        } else {
+          $('#sp108e-mixedColorAnimMode').val('manual');
+          $('#sp108e-mixedColorAnimType').val(this.command.animation.mixed);
+        }
+      }
+    }
+
+    $('#sp108e-brightness').val(this.command.hasOwnProperty('brightness') ?
+      this.command.brightness : 255);
+    $('#sp108e-color').val(this.command.hasOwnProperty('color') ?
+      this.command.color : '#ffffff');
+    $('#sp108e-speed').val(this.command.hasOwnProperty('speed') ?
+      this.command.speed : 0);
+    $('#sp108e-white').val(this.command.hasOwnProperty('white') ?
+      this.command.white : 255);
+    $('#sp108e-order').val(this.command.hasOwnProperty('colorOrder') ?
+      this.command.colorOrder : 'RGB');
+    $('#sp108e-chip').val(this.command.hasOwnProperty('icType') ?
+      this.command.icType : 'SM16703');
+    $('#sp108e-leds').val(this.command.hasOwnProperty('ledsPerSegment') ?
+      this.command.ledsPerSegment : 1);
+    $('#sp108e-segments').val(this.command.hasOwnProperty('numberOfSegments') ?
+      this.command.numberOfSegments : 1);
+    $('#node-input-mode').change(function () {
+      $('.mode-depended').hide();
+      switch ($('#node-input-mode').val()) {
+        case 'onoff':
+          $('#sp108e-onoff').closest('.form-row').show();
+        break;
+        case 'animation':
+          $('#sp108e-animationMode').closest('.form-row').show();
+          switch ($('#sp108e-animationMode').val()) {
+            case 'mono':
+              $('#sp108e-monoColorAnimType').closest('.form-row').show();
+            break;
+            case 'mixed':
+              $('#sp108e-mixedColorAnimMode').closest('.form-row').show();
+              if ($('#sp108e-mixedColorAnimMode').val() == 'manual') {
+                $('#sp108e-mixedColorAnimType').closest('.form-row').show();
+              }
+
+            break;
+          }
+        break;
+        case 'brightness':
+          $('#sp108e-brightness').closest('.form-row').show();
+        break;
+        case 'color':
+          $('#sp108e-color').closest('.form-row').show();
+        break;
+        case 'speed':
+          $('#sp108e-speed').closest('.form-row').show();
+        break;
+        case 'white':
+          $('#sp108e-white').closest('.form-row').show();
+        break;
+        case 'order':
+          $('#sp108e-order').closest('.form-row').show();
+        break;
+        case 'chip':
+          $('#sp108e-chip').closest('.form-row').show();
+        break;
+        case 'leds':
+          $('#sp108e-leds').closest('.form-row').show();
+        break;
+        case 'segments':
+          $('#sp108e-segments').closest('.form-row').show();
+        break;
+      }
+
+      if (($('#node-input-mode').val() != 'status') &&
+        ($('#node-input-mode').val() != 'getname') && ($('#node-input-mode').val() != 'setname')) {
+        $('#node-input-returnStatus').closest('.form-row').show();
+      }
+    });
+
+    $('#sp108e-animationMode').change(function () {
+      $('.anim-depended').hide();
+      if ($('#node-input-mode').val() == 'animation') {
+        switch ($('#sp108e-animationMode').val()) {
+          case 'mono':
+            $('#sp108e-monoColorAnimType').closest('.form-row').show();
+          break;
+          case 'mixed':
+            $('#sp108e-mixedColorAnimMode').closest('.form-row').show();
+            if ($('#sp108e-mixedColorAnimMode').val() == 'manual') {
+              $('#sp108e-mixedColorAnimType').closest('.form-row').show();
+            }
+
+            if ($('#sp108e-mixedColorAnimMode').val() == 'auto') {
+              $('#sp108e-mixedColorAnimType').closest('.form-row').hide();
+            }
+
+          break;
+        }
+      }
+    });
+
+    $('#sp108e-mixedColorAnimMode').change(function () {
+      $('#sp108e-mixedColorAnimType').closest('.form-row').hide();
+      if (($('#node-input-mode').val() == 'animation') &&
+        ($('#sp108e-animationMode').val() == 'mixed')) {
+        if ($('#sp108e-mixedColorAnimMode').val() == 'manual') {
+          $('#sp108e-mixedColorAnimType').closest('.form-row').show();
+        }
+      }
+    });
+
+    $('#node-input-returnStatus').prop('checked', this.returnStatus);
+    $('#node-input-debug').prop('checked', this.debug);
+  },
+
+  oneditsave: function () {
+    this.command = {};
+    switch ($('#node-input-mode').val()) {
+      case 'onoff':
+        this.command.state = $('#sp108e-onoff').val();
+      break;
+      case 'animation':
+        this.command.animation = {};
+        switch ($('#sp108e-animationMode').val()) {
+          case 'mono':
+            this.command.animation.mono = $('#sp108e-monoColorAnimType').val();
+          break;
+          case 'mixed':
+            if ($('#sp108e-mixedColorAnimMode').val() == 'manual') {
+              this.command.animation.mixed = paramNodeValidator('mixedColorAnimType',
+                $('#sp108e-mixedColorAnimType').val()) ?
+                parseInt($('#sp108e-mixedColorAnimType').val(), 10) : 1;
+            } else {
+              this.command.animation.mixed = 'auto';
+            }
+
+          break;
+        }
+      break;
+      case 'brightness':
+        this.command.brightness = paramNodeValidator('brightness',
+          $('#sp108e-brightness').val()) ? parseInt($('#sp108e-brightness').val(), 10) : 255;
+      break;
+      case 'color':
+        this.command.color = $('#sp108e-color').val();
+      break;
+      case 'speed':
+        this.command.speed = paramNodeValidator('speed',
+          $('#sp108e-speed').val()) ? parseInt($('#sp108e-speed').val(), 10) : 0;
+      break;
+      case 'white':
+        this.command.white = paramNodeValidator('white',
+          $('#sp108e-white').val()) ? parseInt($('#sp108e-white').val(), 10) : 255;
+      break;
+      case 'order':
+        this.command.colorOrder = $('#sp108e-order').val();
+      break;
+      case 'chip':
+        this.command.icType = $('#sp108e-chip').val();
+      break;
+      case 'leds':
+        this.command.ledsPerSegment = paramNodeValidator('leds',
+          $('#sp108e-leds').val()) ? parseInt($('#sp108e-leds').val(), 10) : 1;
+      break;
+      case 'segments':
+        this.command.numberOfSegments = paramNodeValidator('segments',
+          $('#sp108e-segments').val()) ? parseInt($('#sp108e-segments').val(), 10) : 1;
+      break;
+    }
+  },
+
+  inputs: 1,
+  outputs: 1,
+  icon: 'icons/command.png',
+  label: function () {
+      return this.name;
+    },
+});
+</script>
+
+<script type="text/html" data-template-name="sp108eCommand">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-device"><i class="fa fa-tablet"></i> <span data-i18n="sp108eCommand.label.device"></label>
+        <input type="text" id="node-input-device" data-i18n="[placeholder]sp108eCommand.label.device">
+    </div>
+    <div class="form-row">
+        <label for="node-input-mode"><i class="fa fa-sign-out"></i> <span data-i18n="sp108eCommand.label.mode"></span></label>
+        <select id="node-input-mode" style="width:70%;">
+            <option value="onoff" data-i18n="sp108eCommand.cmd.onoff"></option>
+            <option value="animation" data-i18n="sp108eCommand.cmd.animation"></option>
+            <option value="brightness" data-i18n="sp108eCommand.cmd.brightness"></option>
+            <option value="color" data-i18n="sp108eCommand.cmd.color"></option>
+            <option value="speed" data-i18n="sp108eCommand.cmd.speed"></option>
+            <option value="white" data-i18n="sp108eCommand.cmd.white"></option>
+            <option value="order" data-i18n="sp108eCommand.cmd.order"></option>
+            <option value="chip" data-i18n="sp108eCommand.cmd.chip"></option>
+            <option value="leds" data-i18n="sp108eCommand.cmd.leds"></option>
+            <option value="segments" data-i18n="sp108eCommand.cmd.segments"></option>
+            <option value="getname" data-i18n="sp108eCommand.cmd.getname"></option>
+            <option value="setname" data-i18n="sp108eCommand.cmd.setname"></option>
+            <option value="json" data-i18n="sp108eCommand.cmd.json"></option>
+            <option value="status" data-i18n="sp108eCommand.cmd.status"></option>
+        </select>
+    </div>
+    <div class="form-row mode-depended">
+        <label for="sp108e-onoff"><span data-i18n="sp108eCommand.label.onoff"></span></label>
+        <select id="sp108e-onoff" style="width:70%;">
+            <option value="on" data-i18n="sp108eCommand.state.on"></option>
+            <option value="off" data-i18n="sp108eCommand.state.off"></option>
+        </select>
+    </div>
+    <div class="form-row mode-depended">
+        <label for="sp108e-animationMode"><span data-i18n="sp108eCommand.label.animationMode"></span></label>
+        <select id="sp108e-animationMode" style="width:70%;">
+            <option value="mono" data-i18n="sp108eCommand.animation.mono"></option>
+            <option value="mixed" data-i18n="sp108eCommand.animation.mixed"></option>
+        </select>
+    </div>
+    <div class="form-row mode-depended anim-depended">
+        <label for="sp108e-monoColorAnimType"><span data-i18n="sp108eCommand.label.monoColorAnimType"></span></label>
+        <select id="sp108e-monoColorAnimType" style="width:70%;">
+            <option value="meteor" data-i18n="sp108eCommand.animation.meteor"></option>
+            <option value="breathing" data-i18n="sp108eCommand.animation.breathing"></option>
+            <option value="stack" data-i18n="sp108eCommand.animation.stack"></option>
+            <option value="flow" data-i18n="sp108eCommand.animation.flow"></option>
+            <option value="wave" data-i18n="sp108eCommand.animation.wave"></option>
+            <option value="flash" data-i18n="sp108eCommand.animation.flash"></option>
+            <option value="static" data-i18n="sp108eCommand.animation.static"></option>
+            <option value="catchup" data-i18n="sp108eCommand.animation.catchup"></option>
+        </select>
+    </div>
+    <div class="form-row mode-depended anim-depended">
+        <label for="sp108e-mixedColorAnimMode"><span data-i18n="sp108eCommand.label.mixedColorAnimMode"></span></label>
+        <select id="sp108e-mixedColorAnimMode" style="width:70%;">
+            <option value="auto" data-i18n="sp108eCommand.animation.auto"></option>
+            <option value="manual" data-i18n="sp108eCommand.animation.manual"></option>
+        </select>
+    </div>
+    <div class="form-row mode-depended anim-depended">
+        <label for="sp108e-mixedColorAnimType"><span data-i18n="sp108eCommand.label.mixedColorAnimType"></label>
+        <input type="text" id="sp108e-mixedColorAnimType" data-i18n="[placeholder]sp108eCommand.label.mixedColorAnimType">
+    </div>
+    <div class="form-row mode-depended">
+        <label for="sp108e-brightness"><span data-i18n="sp108eCommand.label.brightness"></label>
+        <input type="text" id="sp108e-brightness" data-i18n="[placeholder]sp108eCommand.label.brightness">
+    </div>
+    <div class="form-row mode-depended">
+        <label for="sp108e-color"><span data-i18n="sp108eCommand.label.color"></label>
+        <input type="color" id="sp108e-color" data-i18n="[placeholder]sp108eCommand.label.color">
+    </div>
+    <div class="form-row mode-depended">
+        <label for="sp108e-speed"><span data-i18n="sp108eCommand.label.speed"></label>
+        <input type="text" id="sp108e-speed" data-i18n="[placeholder]sp108eCommand.label.speed">
+    </div>
+    <div class="form-row mode-depended">
+        <label for="sp108e-white"><span data-i18n="sp108eCommand.label.white"></label>
+        <input type="text" id="sp108e-white" data-i18n="[placeholder]sp108eCommand.label.white">
+    </div>
+    <div class="form-row mode-depended">
+        <label for="sp108e-order"><span data-i18n="sp108eCommand.label.order"></span></label>
+        <select id="sp108e-order" style="width:70%;">
+            <option value="RGB">RGB</option>
+            <option value="RBG">RBG</option>
+            <option value="GRB">GRB</option>
+            <option value="GBR">GBR</option>
+            <option value="BRG">BRG</option>
+            <option value="BGR">BGR</option>
+        </select>
+    </div>
+    <div class="form-row mode-depended">
+        <label for="sp108e-chip"><span data-i18n="sp108eCommand.label.chip"></span></label>
+        <select id="sp108e-chip" style="width:70%;">
+            <option value="SM16703">SM16703</option>
+            <option value="TM1804">TM1804</option>
+            <option value="UCS1903">UCS1903</option>
+            <option value="WS2811">WS2811</option>
+            <option value="WS2801">WS2801</option>
+            <option value="SK6812">SK6812</option>
+            <option value="LPD6803">LPD6803</option>
+            <option value="LPD8806">LPD8806</option>
+            <option value="APA102">APA102</option>
+            <option value="APA105">APA105</option>
+            <option value="DMX512">DMX512</option>
+            <option value="TM1914">TM1914</option>
+            <option value="TM1913">TM1913</option>
+            <option value="P9813">P9813</option>
+            <option value="INK1003">INK1003</option>
+            <option value="P943S">P943S</option>
+            <option value="P9411">P9411</option>
+            <option value="P9413">P9413</option>
+            <option value="TX1812">TX1812</option>
+            <option value="TX1813">TX1813</option>
+            <option value="GS8206">GS8206</option>
+            <option value="GS8208">GS8208</option>
+            <option value="SK9822">SK9822</option>
+            <option value="TM1814">TM1814</option>
+            <option value="SK6812_RGBW">SK6812_RGBW</option>
+            <option value="P9414">P9414</option>
+            <option value="P9412">P9412</option>
+        </select>
+    </div>
+    <div class="form-row mode-depended">
+        <label for="sp108e-leds"><span data-i18n="sp108eCommand.label.leds"></label>
+        <input type="text" id="sp108e-leds" data-i18n="[placeholder]sp108eCommand.label.leds">
+    </div>
+    <div class="form-row mode-depended">
+        <label for="sp108e-segments"><span data-i18n="sp108eCommand.label.segments"></label>
+        <input type="text" id="sp108e-segments" data-i18n="[placeholder]sp108eCommand.label.segments">
+    </div>
+    <div class="form-row mode-depended">
+        <label for="node-input-returnStatus"><span data-i18n="sp108eCommand.label.status"></label>
+        <input type="checkbox" id="node-input-returnStatus">
+    </div>
+    <div class="form-row">
+        <label for="node-input-debug"><span data-i18n="sp108eCommand.label.debug"></label>
+        <input type="checkbox" id="node-input-debug">
+    </div>
+    <div class="form-tips" data-i18n="[html]sp108eCommand.msg.tip"></div>
+</script>
+
+<script type="text/html" data-help-name="sp108eCommand">
+    <p>Node that send commands on your sp108e adressable RGB LED strip controller</p>
+    <p><b>Predefined</b> modes allows you send commands to sp108e device to toggle power or set different parameters like animation mode, brightness, color, speed, value of white channel, color channel order, type of led strip controller chip, number of led segments, number of leds per segment.</p>
+    <p><b>JSON data</b> allows you send commands in JSON format, for example: { "brightness": 255 } or { "animation": { "mixed": "auto" } } Command format you can see in status returning with checked option "Return device status".</p>
+    <p><b>Get device status</b> allows simply return current device status.</p>
+    <p><b>Get device name</b> return current device name (without SP108E_ prefix).</p>
+    <p><b>Set device name</b> set device name (max 10 characters from []-a-zA-Z0-9_] set). You must provide new device name to input msg.payload.</p>
+    <p><b>Return device status (option)</b> needs to return device status in output msg.payload.</p>
+    <p><b>Trace debug info (option)</b> needs to show debug info like raw hex commands in debug messages.</p>
+</script>

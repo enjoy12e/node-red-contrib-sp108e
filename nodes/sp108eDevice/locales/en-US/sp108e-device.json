@@ -1,0 +1,9 @@
+{
+    "sp108eDevice" : {
+        "label": {
+            "host":"Host",
+            "port":"Port",
+            "name":"Device name"
+        }
+    }
+}
